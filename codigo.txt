@@ -1,0 +1,89 @@
+!pip install pandas numpy matplotlib seaborn scikit-learn
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+
+# Cargar el conjunto de datos
+data = pd.read_csv("covid.csv")
+
+
+# Seleccionar las variables predictoras y la variable objetivo
+X = data[["new_cases", "new_deaths"]]
+y = data["country"]
+
+# Dividir en conjuntos de entrenamiento y prueba
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Estandarizar las variables predictoras
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Crear y entrenar el modelo Naive Bayes
+model = GaussianNB()
+model.fit(X_train, y_train)
+
+# Hacer predicciones en el conjunto de prueba
+y_pred = model.predict(X_test)
+
+# Calcular métricas de evaluación
+print("Classification Report:")
+print(classification_report(y_test, y_pred))
+
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+print("Accuracy Score:")
+print(accuracy_score(y_test, y_pred))
+
+# Graficar la matriz de confusión
+cm = confusion_matrix(y_test, y_pred)
+plt.figure(figsize=(10, 7))
+sns.heatmap(cm, annot=True, cmap="YlGnBu")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
+
+# Crear un DataFrame con las etiquetas reales y las predicciones
+results = pd.DataFrame({"Actual": y_test, "Predicted": y_pred})
+
+# Agrupar por etiquetas reales y predichas, y calcular el conteo de casos en cada grupo
+grouped_results = results.groupby(["Actual", "Predicted"]).size().reset_index(name="Count")
+
+# Graficar el gráfico de dispersión
+plt.figure(figsize=(15, 15))
+scatter = plt.scatter(grouped_results["Actual"], grouped_results["Predicted"], c=grouped_results["Count"], cmap="YlGnBu", s=grouped_results["Count"]*5, edgecolors="k", alpha=0.7)
+
+# Agregar leyenda y etiquetas de eje
+plt.legend(*scatter.legend_elements("sizes", num=5, func=lambda x: x / 5), title="Count", bbox_to_anchor=(1.05, 1), loc="upper left")
+plt.xlabel("Actual Country")
+plt.ylabel("Predicted Country")
+plt.xticks(rotation=90)
+plt.yticks(rotation=0)
+plt.grid(True)
+
+# Mostrar el gráfico
+plt.show()
+
+
+# Confiabilidad
+from sklearn.metrics import accuracy_score, classification_report
+
+# Hacer predicciones en el conjunto de prueba
+y_pred = model.predict(X_test)
+
+# Calcular Accuracy Score
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy Score:")
+print(accuracy)
+
+# Calcular y mostrar el Classification Report
+report = classification_report(y_test, y_pred)
+print("Classification Report:")
+print(report)
